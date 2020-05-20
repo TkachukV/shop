@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\User;
+use App\Model\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Ramsey\Uuid\Uuid;
 
 class AuthController extends Controller
 {
@@ -29,15 +30,19 @@ class AuthController extends Controller
      */
     public function registration()
     {
-        $name = request('name');
+        $login = request('login');
         $email = request('email');
         $password = request('password');
+        $phone = request('phone');
 
         $user = new User();
-        $user->name = $name;
+        $user->id = Uuid::uuid4();
+        $user->login = $login;
         $user->email = $email;
+        $user->phone = $phone;
         $user->password = Hash::make($password);
         $user->save();
+
 
         return response()->json(['message' => 'Successfully registration!']);
     }
