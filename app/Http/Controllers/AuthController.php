@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Model\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Ramsey\Uuid\Uuid;
+use App\Services\UserServices;
+
 
 class AuthController extends Controller
 {
-    public function __construct()
+    private $userServices;
+
+    public function __construct(UserServices $userServices)
     {
+        $this->userServices = $userServices;
         $this->middleware('auth:api', ['except' => ['login', 'registration']]);
     }
 
@@ -30,21 +31,19 @@ class AuthController extends Controller
      */
     public function registration()
     {
-        $login = request('login');
-        $email = request('email');
-        $password = request('password');
-        $phone = request('phone');
+        $data = request()->toArray();
+        $credentials = request()->only(['login','password']);
+        /*
+         * This method registration User
+         */
+        if (!$this->userServices->registrationUser($data)) {
 
-        $user = new User();
-        $user->id = Uuid::uuid4();
-        $user->login = $login;
-        $user->email = $email;
-        $user->phone = $phone;
-        $user->password = Hash::make($password);
-        $user->save();
+            return response()->json(['error' => 'false',], 401);
+        }
 
+        $token = auth()->attempt($credentials);
 
-        return response()->json(['message' => 'Successfully registration!']);
+        return $this->respondWithToken($token);
     }
 
     /**
